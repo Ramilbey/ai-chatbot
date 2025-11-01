@@ -1,5 +1,6 @@
-import React, { useState } from "react"
-import axios from "axios"; 
+import React, { useState } from "react";
+import axios from "axios";
+import "./App.css";
 
 function App() {
   const [input, setInput] = useState("");
@@ -9,33 +10,35 @@ function App() {
     if (!input.trim()) return;
     const userMsg = { sender: "You", text: input };
 
-    const res = await axios.post("http://localhost:5000/message", { text: input });
-    const aiMsg = { sender: "AI", text: res.data.reply }
-    
-    setChat([...chat, userMsg, aiMsg]);
-    setInput("")
-  }
+    try {
+      const res = await axios.post("http://localhost:5000/message", { text: input });
+      const aiMsg = { sender: "AI", text: res.data.reply };
+      setChat((prev) => [...prev, userMsg, aiMsg]);
+    } catch (err) {
+      console.error("Error:", err);
+      setChat((prev) => [...prev, userMsg, { sender: "AI", text: "Error connecting to server." }]);
+    }
+
+    setInput("");
+  };
 
   return (
-    <div className="p-4 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4 text-center">ProtoAI 🤖</h1>
-      <div className="border rounded-lg h-96 overflow-y-auto p-3 bg-gray-50">
+    <div className="app">
+      <h1>ProtoAI 🤖</h1>
+      <div className="chat-box">
         {chat.map((msg, i) => (
-          <p key={i} className={msg.sender === "AI" ? "text-blue-600" : "text-green-700"}>
+          <p key={i} className={msg.sender === "AI" ? "ai-msg" : "user-msg"}>
             <strong>{msg.sender}:</strong> {msg.text}
           </p>
         ))}
       </div>
-      <div className="flex mt-3">
+      <div className="input-area">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="flex-grow border p-2 rounded-l"
           placeholder="Type your message..."
         />
-        <button onClick={sendMessage} className="bg-blue-600 text-white px-4 rounded-r">
-          Send
-        </button>
+        <button onClick={sendMessage}>Send</button>
       </div>
     </div>
   );
